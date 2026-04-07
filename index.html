@@ -83,21 +83,18 @@
             }];
             let redirectUrls = ["https://www.youtube.com/watch?v=dQw4w9WgXcQ"];
 
-            // --- Dynamic Routing Logic ---
-            // 1. Check Query Parameter: ?v=code.mp4
-            const urlParams = new URLSearchParams(window.location.search);
-            let targetCode = urlParams.get('v');
-
-            // 2. Check Pathname: /v/code.mp4 (Fallback)
-            if (!targetCode) {
-                const pathParts = window.location.pathname.split('/');
-                const vIndex = pathParts.indexOf('v');
-                if (vIndex !== -1 && pathParts[vIndex + 1]) {
-                    targetCode = pathParts[vIndex + 1];
+            // --- Hash Routing Logic ---
+            // Expected URL format: domain.com/#/v/code.mp4
+            const getCodeFromHash = () => {
+                const hash = window.location.hash; // Returns something like "#/v/abcdefg.mp4"
+                if (hash.startsWith('#/v/')) {
+                    return hash.replace('#/v/', '');
                 }
-            }
+                return null;
+            };
 
             const updateDisplay = (video, urls) => {
+                document.title = video.title;
                 videoTitleText.innerText = video.title;
                 videoPreview.style.backgroundImage = `url('${video.pic}')`;
                 prankTrigger.href = urls[Math.floor(Math.random() * urls.length)];
@@ -114,16 +111,15 @@
                         videoData = json.data;
                         redirectUrls = json.urls;
                         
-                        // Find the video matching the code from URL
+                        const targetCode = getCodeFromHash();
                         let selectedVideo = videoData.find(v => v.code === targetCode);
                         
-                        // If no code or no match, pick random or first
                         if (!selectedVideo) {
                             selectedVideo = videoData[0];
                         }
                         
                         updateDisplay(selectedVideo, redirectUrls);
-                        console.log("Remote data loaded. Matched code:", targetCode);
+                        console.log("Remote data loaded. Matched from Hash:", targetCode);
                     }
                 })
                 .catch(err => console.warn("Using fallback data:", err));
@@ -132,6 +128,13 @@
             prankTrigger.addEventListener('click', () => {
                 const randomUrl = redirectUrls[Math.floor(Math.random() * redirectUrls.length)];
                 prankTrigger.href = randomUrl;
+            });
+
+            // Listen for Hash Changes (Optional: user can switch videos without refreshing)
+            window.addEventListener('hashchange', () => {
+                const targetCode = getCodeFromHash();
+                const selectedVideo = videoData.find(v => v.code === targetCode) || videoData[0];
+                updateDisplay(selectedVideo, redirectUrls);
             });
 
             // Loading sequence
